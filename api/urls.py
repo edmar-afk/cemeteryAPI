@@ -7,4 +7,11 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='get_token'),
     path('token/refresh', TokenRefreshView.as_view(), name='refresh_token'),
     path('user/', views.UserDetailView.as_view(), name='user_detail'),
+    
+    path('kalags/create/', views.KalagCreateView.as_view(), name='kalag-create'),
+    path('kalag/', views.KalagListView.as_view(), name='kalag-list'),
+    path('kalag/<int:pk>/delete/', views.KalagDeleteView.as_view(), name='kalag-delete'),
+    
+    path('plots/', views.CreateOrUpdatePlotView.as_view(), name='create-or-update-plot'),
+    path('plots-list/', views.LatestPlotView.as_view(), name='plot-by-section'),
 ]
