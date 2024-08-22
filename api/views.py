@@ -2,10 +2,10 @@ from rest_framework import generics, permissions, views
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework import status
-from .serializers import UserSerializer, KalagSerializer, PlotSerializer
+from .serializers import UserSerializer, KalagSerializer, PlotSerializer, MasterListSerializer, MasterListViewSerializer
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from .models import Kalag, Plot
+from .models import Kalag, Plot, MasterList
 from rest_framework.views import APIView
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -24,12 +24,15 @@ class UserDetailView(generics.RetrieveAPIView):
 
 
 class KalagCreateView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = KalagSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 
 
@@ -38,6 +41,7 @@ class KalagListView(generics.ListAPIView):
     serializer_class = KalagSerializer
     filter_backends = [SearchFilter]
     search_fields = ['cemetery_section']
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -49,6 +53,7 @@ class KalagListView(generics.ListAPIView):
 class KalagDeleteView(generics.DestroyAPIView):
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
+    permission_classes = [AllowAny]
 
     def delete(self, request, *args, **kwargs):
         # Retrieve the Kalag object by ID
@@ -61,6 +66,8 @@ class KalagDeleteView(generics.DestroyAPIView):
 
 
 class CreateOrUpdatePlotView(APIView):
+    permission_classes = [AllowAny]
+    
     def post(self, request, *args, **kwargs):
         cemetery_section = request.data.get('cemetery_section')
         name = request.data.get('name')
@@ -85,7 +92,8 @@ class CreateOrUpdatePlotView(APIView):
         
 class LatestPlotView(generics.ListAPIView):
     serializer_class = PlotSerializer
-
+    permission_classes = [AllowAny]
+    
     def get_queryset(self):
         cemetery_section = self.request.query_params.get('cemetery_section', None)
         if cemetery_section:
@@ -94,3 +102,51 @@ class LatestPlotView(generics.ListAPIView):
         else:
             queryset = Plot.objects.none()
         return queryset
+    
+
+class AllKalagListsAPIView(generics.ListAPIView):
+    queryset = Kalag.objects.all()
+    serializer_class = KalagSerializer
+    
+    
+class MasterListCreateView(generics.CreateAPIView):
+    queryset = MasterList.objects.all()
+    serializer_class = MasterListSerializer  
+    permission_classes = [AllowAny]
+
+    def get_serializer(self, *args, **kwargs):
+        print("Request data:", self.request.data)  # Print the request data
+        return super().get_serializer(*args, **kwargs)
+
+    def perform_create(self, serializer):
+        kalag_id = self.request.data.get('kalag')
+        if MasterList.objects.filter(kalag_id=kalag_id).exists():
+            raise ValidationError("A MasterList entry for this Deceased Person already exists; duplication is not allowed.")
+        
+        # Save the serializer if everything is correct
+        serializer.save()
+
+    def post(self, request, *args, **kwargs):
+        kalag_id = request.data.get('kalag')
+        if MasterList.objects.filter(kalag_id=kalag_id).exists():
+            return Response(
+                {"error": "A MasterList entry for this Deceased Person already exists; duplication is not allowed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().post(request, *args, **kwargs)
+class MasterListView(generics.ListAPIView):
+    queryset = MasterList.objects.all()
+    serializer_class = MasterListViewSerializer
+    
+class MasterListDeleteAPIView(generics.DestroyAPIView):
+    queryset = MasterList.objects.all()
+    serializer_class = MasterListViewSerializer
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except MasterList.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
