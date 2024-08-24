@@ -150,3 +150,13 @@ class MasterListDeleteAPIView(generics.DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except MasterList.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+class KalagUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = Kalag.objects.all()
+    serializer_class = KalagSerializer
+    lookup_field = 'id'
+    
+class KalagDetailAPIView(generics.RetrieveAPIView):
+    queryset = Kalag.objects.all()
+    serializer_class = KalagSerializer
+    lookup_field = 'id'

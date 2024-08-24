@@ -8,9 +8,12 @@ urlpatterns = [
     path('token/refresh', TokenRefreshView.as_view(), name='refresh_token'),
     path('user/', views.UserDetailView.as_view(), name='user_detail'),
     
+    
     path('kalags/create/', views.KalagCreateView.as_view(), name='kalag-create'),
     path('kalag/', views.KalagListView.as_view(), name='kalag-list'),
     path('kalag/<int:pk>/delete/', views.KalagDeleteView.as_view(), name='kalag-delete'),
+    path('kalag/<int:id>/update/', views.KalagUpdateAPIView.as_view(), name='kalag-update'),
+    path('kalags/<int:id>/', views.KalagDetailAPIView.as_view(), name='kalag-detail'),
     
     path('plots/', views.CreateOrUpdatePlotView.as_view(), name='create-or-update-plot'),
     path('plots-list/', views.LatestPlotView.as_view(), name='plot-by-section'),

@@ -18,6 +18,7 @@ class KalagSerializer(serializers.ModelSerializer):
             'date_born', 
             'date_died', 
             'address',
+            'grave_number',
             'relative_name', 
             'relative_number', 
             'relative_address', 
