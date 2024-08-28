@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, views
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework import status
-from .serializers import UserSerializer, KalagSerializer, PlotSerializer, MasterListSerializer, MasterListViewSerializer
+from .serializers import UserSerializer, KalagSerializer, PlotSerializer, MasterListSerializer, MasterListViewSerializer, MemoriesSerializer
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from .models import Kalag, Plot, MasterList
@@ -160,3 +160,27 @@ class KalagDetailAPIView(generics.RetrieveAPIView):
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
     lookup_field = 'id'
+    
+    
+    
+class CreateMemoriesView(APIView):
+    def post(self, request, kalag_id):
+        # Get the Kalag object using the kalag_id from the URL
+        kalag = get_object_or_404(Kalag, id=kalag_id)
+        
+        # Combine kalag with the incoming data
+        data = request.data.copy()
+        data['kalag'] = kalag.id
+        
+        # Serialize the data
+        serializer = MemoriesSerializer(data=data)
+        
+        # Check if the data is valid
+        if serializer.is_valid():
+            # Save the serializer, which creates a Memories instance
+            serializer.save()
+            # Return a successful response
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # Return a response with errors if the data is invalid
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

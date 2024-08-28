@@ -22,4 +22,6 @@ urlpatterns = [
     path('masterlist-create/', views.MasterListCreateView.as_view(), name='masterlist-create'),
     path('masterlist/', views.MasterListView.as_view(), name='masterlist-list'),
     path('masterlist/<int:pk>/delete/', views.MasterListDeleteAPIView.as_view(), name='masterlist-delete'),
+    
+    path('memories/create/<int:kalag_id>/', views.CreateMemoriesView.as_view(), name='create-memories'),
 ]

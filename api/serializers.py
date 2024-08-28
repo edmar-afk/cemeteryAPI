@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Kalag, Plot, MasterList
+from .models import Kalag, Plot, MasterList, Memories
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,3 +51,19 @@ class MasterListViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = MasterList
         fields = ['id', 'kalag', 'grave_level', 'amount', 'year', 'date_registered', 'status']
+        
+        
+class MemoriesSerializer(serializers.ModelSerializer):
+    kalag = KalagSerializer()  # Use KalagSerializer for the kalag field
+
+    class Meta:
+        model = Memories
+        fields = [
+            'id',
+            'kalag',
+            'speech',
+            'background_image',
+            'profile_pic',
+            'qr',
+            'video'
+        ]

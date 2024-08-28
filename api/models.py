@@ -22,6 +22,7 @@ class Memories(models.Model):
     speech = models.TextField()
     background_image = models.FileField(upload_to='background/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], null=True, blank=True)
     profile_pic = models.FileField(upload_to='profile/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], null=True, blank=True)
+    qr = models.FileField(upload_to='qrs/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], blank=True)
     video = models.FileField(upload_to='video/', validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'mkv', 'wmv', 'mpeg'])], null=True, blank=True)
     
 class Plot(models.Model):
