@@ -15,16 +15,24 @@ class Kalag(models.Model):
     relative_number = models.TextField()
     relative_address = models.TextField()
     relative_relation = models.TextField()
+    qr = models.FileField(upload_to='qrs/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], blank=True)
 
 
 class Memories(models.Model):
     kalag = models.ForeignKey(Kalag, on_delete=models.CASCADE)
-    speech = models.TextField()
+    speech = models.TextField(blank=True, null=True)
     background_image = models.FileField(upload_to='background/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], null=True, blank=True)
     profile_pic = models.FileField(upload_to='profile/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], null=True, blank=True)
-    qr = models.FileField(upload_to='qrs/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], blank=True)
-    video = models.FileField(upload_to='video/', validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'mkv', 'wmv', 'mpeg'])], null=True, blank=True)
+   
+
+class ImagesMemories(models.Model):
+    kalag = models.ForeignKey(Kalag, on_delete=models.CASCADE)
+    background_image = models.FileField(upload_to='background/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], null=True, blank=True)
     
+class VideosMemories(models.Model):
+    kalag = models.ForeignKey(Kalag, on_delete=models.CASCADE)
+    video = models.FileField(upload_to='video/', validators=[FileExtensionValidator(allowed_extensions=['mp4', 'mov', 'mkv', 'wmv', 'mpeg'])], null=True, blank=True)
+
 class Plot(models.Model):
     cemetery_section = models.TextField()
     name = models.TextField()

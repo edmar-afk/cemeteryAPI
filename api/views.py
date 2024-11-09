@@ -2,16 +2,25 @@ from rest_framework import generics, permissions, views
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework import status
-from .serializers import UserSerializer, KalagSerializer, PlotSerializer, MasterListSerializer, MasterListViewSerializer, MemoriesSerializer
+from .serializers import ImagesMemoriesSerializer, UserSerializer, KalagSerializer, PlotSerializer, MasterListSerializer, MasterListViewSerializer, MemoriesSerializer
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from .models import Kalag, Plot, MasterList
+from .models import Kalag, Plot, MasterList, Memories, ImagesMemories
 from rest_framework.views import APIView
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views import View
 from rest_framework.decorators import api_view
 from rest_framework.filters import SearchFilter
+import qrcode
+from io import BytesIO
+import base64
+from django.http import HttpResponse
+from django.core.files.base import ContentFile
+from rest_framework.exceptions import NotFound
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
@@ -157,6 +166,7 @@ class KalagUpdateAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
     
 class KalagDetailAPIView(generics.RetrieveAPIView):
+    permission_classes = [AllowAny]
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
     lookup_field = 'id'
@@ -184,3 +194,191 @@ class CreateMemoriesView(APIView):
         
         # Return a response with errors if the data is invalid
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+class UpdateKalagQR(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            kalag = Kalag.objects.get(pk=pk)
+        except Kalag.DoesNotExist:
+            return Response({"error": "Kalag not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generate QR code with Kalag data, including the id
+        kalag_data = {
+            'id': kalag.id,  # Add the id to the QR data
+            'cemetery_section': kalag.cemetery_section,
+            'name': kalag.name,
+            'date_born': kalag.date_born,
+            'date_died': kalag.date_died,
+            'address': kalag.address,
+            'grave_number': kalag.grave_number,
+            'relative_name': kalag.relative_name,
+            'relative_number': kalag.relative_number,
+            'relative_address': kalag.relative_address,
+            'relative_relation': kalag.relative_relation,
+        }
+
+        # Format kalag data into a string for QR code
+        kalag_info = '\n'.join(f"{key}: {value}" for key, value in kalag_data.items())
+        qr_image = qrcode.make(kalag_info)
+
+        # Save QR code to BytesIO
+        buffer = BytesIO()
+        qr_image.save(buffer, format='PNG')
+        buffer.seek(0)
+
+        # Save QR code to the model
+        qr_filename = f'kalag_{pk}.png'
+        kalag.qr.save(qr_filename, ContentFile(buffer.read()), save=True)
+
+        # Encode QR code to base64 for API response
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+        # Serialize the Kalag instance and add QR code to the response
+        serializer = KalagSerializer(kalag)
+        response_data = serializer.data
+        response_data['qr'] = qr_code_base64  # Add base64 QR code to response
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    
+    
+    
+    
+class ScannedKalagQrView(APIView):
+    """
+    API View to fetch Kalag details using kalagId (parameter).
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, kalagId, *args, **kwargs):
+        try:
+            # Retrieve Kalag object by ID
+            kalag = Kalag.objects.get(id=kalagId)
+        except Kalag.DoesNotExist:
+            # If Kalag not found, return a 404 error response
+            return Response({"error": "Kalag not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Serialize Kalag data
+        serializer = KalagSerializer(kalag)
+        
+        # Return the serialized data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    
+    
+
+class AddUpdateMemoriesAPIView(generics.GenericAPIView):
+    serializer_class = MemoriesSerializer
+
+    def post(self, request, id):
+        print("Received request data:", request.data)  # Print all request data
+        print("Received request files:", request.FILES)  # Print all request files
+
+        try:
+            kalag_instance = Kalag.objects.get(id=id)
+            print(f"Kalag instance found: {kalag_instance}")
+        except Kalag.DoesNotExist:
+            print(f"Kalag with id {id} not found.")
+            raise NotFound(f"Kalag with id {id} not found.")
+
+        # Check if a Memories instance for the given Kalag already exists
+        memories_instance, created = Memories.objects.get_or_create(kalag=kalag_instance)
+        print("Memories instance:", "Created new" if created else "Existing", memories_instance)
+
+        # Serialize the data
+        serializer = self.get_serializer(memories_instance, data=request.data, partial=True)
+
+        # Validate the serializer before accessing validated_data
+        if serializer.is_valid():
+            print("Serializer data is valid.")
+
+            # Check if a new profile_pic is provided
+            if not request.FILES.get("profile_pic"):
+                # If no new profile_pic is provided, keep the existing one
+                serializer.validated_data['profile_pic'] = memories_instance.profile_pic
+
+            # Save the memory
+            serializer.save(kalag=kalag_instance)  # Explicitly set the kalag relation
+            message = "Memory created" if created else "Memory updated"
+            print("Memory saved successfully:", serializer.data)
+            return Response({
+                "message": message,
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+        else:
+            print("Validation errors:", serializer.errors)  # Print validation errors
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class KalagMemoriesListAPIView(generics.ListAPIView):
+    serializer_class = MemoriesSerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        kalag_id = self.kwargs['id']
+        
+        # Check if Kalag with given ID exists
+        try:
+            kalag_instance = Kalag.objects.get(id=kalag_id)
+            print(f"Kalag instance found: {kalag_instance}")
+        except Kalag.DoesNotExist:
+            print(f"Kalag with id {kalag_id} not found.")
+            raise NotFound(f"Kalag with id {kalag_id} not found.")
+        
+        # Return Memories associated with the Kalag instance
+        return Memories.objects.filter(kalag=kalag_instance)
+    
+    
+    
+    
+class ImagesMemoriesUploadAPIView(generics.CreateAPIView):
+    queryset = ImagesMemories.objects.all()
+    serializer_class = ImagesMemoriesSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Save the image memory entry
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class KalagImagesListAPIView(APIView):
+    def get(self, request, kalagId, *args, **kwargs):
+        # Filter ImagesMemories entries by kalag_id
+        images = ImagesMemories.objects.filter(kalag_id=kalagId)
+        
+        if not images.exists():
+            return Response(
+                {"detail": "No images found for this Kalag entry."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ImagesMemoriesSerializer(images, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class DeleteImagesMemoriesAPIView(APIView):
+    permission_classes = [IsAuthenticated]  # Optionally, add permissions
+
+    def delete(self, request, *args, **kwargs):
+        image_memory_id = kwargs.get('id')
+        
+        try:
+            image_memory = ImagesMemories.objects.get(id=image_memory_id)
+            image_memory.delete()
+            return Response({"message": "Image memory deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except ImagesMemories.DoesNotExist:
+            return Response({"error": "Image memory not found."}, status=status.HTTP_404_NOT_FOUND)

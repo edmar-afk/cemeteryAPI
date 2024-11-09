@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Kalag, Plot, MasterList, Memories
+from .models import Kalag, Plot, MasterList, Memories, ImagesMemories, VideosMemories
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,6 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class KalagSerializer(serializers.ModelSerializer):
+    qr = serializers.CharField(allow_blank=True, required=False)  # Allow qr to be blank and not required
+
     class Meta:
         model = Kalag
         fields = [
@@ -22,7 +24,8 @@ class KalagSerializer(serializers.ModelSerializer):
             'relative_name', 
             'relative_number', 
             'relative_address', 
-            'relative_relation'
+            'relative_relation',
+            'qr'  # qr should not be required
         ]
 
 
@@ -54,7 +57,7 @@ class MasterListViewSerializer(serializers.ModelSerializer):
         
         
 class MemoriesSerializer(serializers.ModelSerializer):
-    kalag = KalagSerializer()  # Use KalagSerializer for the kalag field
+    kalag = serializers.PrimaryKeyRelatedField(queryset=Kalag.objects.all())  # Use ID instead of nested data
 
     class Meta:
         model = Memories
@@ -62,8 +65,18 @@ class MemoriesSerializer(serializers.ModelSerializer):
             'id',
             'kalag',
             'speech',
-            'background_image',
             'profile_pic',
-            'qr',
-            'video'
         ]
+class ImagesMemoriesSerializer(serializers.ModelSerializer):
+    kalag = serializers.PrimaryKeyRelatedField(queryset=Kalag.objects.all())  # Accept kalag ID
+
+    class Meta:
+        model = ImagesMemories
+        fields = ['id', 'kalag', 'background_image']
+
+class VideosMemoriesSerializer(serializers.ModelSerializer):
+    kalag = KalagSerializer()  # Use KalagSerializer for the kalag field
+
+    class Meta:
+        model = VideosMemories
+        fields = ['id', 'kalag', 'video']

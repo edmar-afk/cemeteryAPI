@@ -24,4 +24,15 @@ urlpatterns = [
     path('masterlist/<int:pk>/delete/', views.MasterListDeleteAPIView.as_view(), name='masterlist-delete'),
     
     path('memories/create/<int:kalag_id>/', views.CreateMemoriesView.as_view(), name='create-memories'),
+    
+    path('kalag/<int:pk>/update-qr/', views.UpdateKalagQR.as_view(), name='update_kalag_qr'),
+    
+    path('scanned-kalag/<int:kalagId>/', views.ScannedKalagQrView.as_view(), name='scanned-kalag-detail'),
+    
+    path('kalags/<int:id>/memories/', views.AddUpdateMemoriesAPIView.as_view(), name='add_update_memories'),
+    path('kalags/<int:id>/memories-list/', views.KalagMemoriesListAPIView.as_view(), name='kalag-memories-list'),
+    
+    path('kalags/<int:kalag_id>/upload-image-memory/', views.ImagesMemoriesUploadAPIView.as_view(), name='upload-image-memory'),
+    path('kalags/<int:kalagId>/images/', views.KalagImagesListAPIView.as_view(), name='kalag-images-list'),
+    path('imagesmemories/<int:id>/delete/', views.DeleteImagesMemoriesAPIView.as_view(), name='delete-imagesmemories'),
 ]
