@@ -23,6 +23,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class UserDetailView(generics.RetrieveAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -46,6 +47,7 @@ class KalagCreateView(APIView):
 
 
 class KalagListView(generics.ListAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
     filter_backends = [SearchFilter]
@@ -114,11 +116,13 @@ class LatestPlotView(generics.ListAPIView):
     
 
 class AllKalagListsAPIView(generics.ListAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
     
     
 class MasterListCreateView(generics.CreateAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = MasterList.objects.all()
     serializer_class = MasterListSerializer  
     permission_classes = [AllowAny]
@@ -145,10 +149,12 @@ class MasterListCreateView(generics.CreateAPIView):
         
         return super().post(request, *args, **kwargs)
 class MasterListView(generics.ListAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = MasterList.objects.all()
     serializer_class = MasterListViewSerializer
     
 class MasterListDeleteAPIView(generics.DestroyAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = MasterList.objects.all()
     serializer_class = MasterListViewSerializer
 
@@ -161,19 +167,18 @@ class MasterListDeleteAPIView(generics.DestroyAPIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         
 class KalagUpdateAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
     lookup_field = 'id'
     
 class KalagDetailAPIView(generics.RetrieveAPIView):
-    permission_classes = [AllowAny]
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
-    lookup_field = 'id'
-    
-    
+    lookup_field = 'id'  # Use 'id' as the lookup field
     
 class CreateMemoriesView(APIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     def post(self, request, kalag_id):
         # Get the Kalag object using the kalag_id from the URL
         kalag = get_object_or_404(Kalag, id=kalag_id)
@@ -206,7 +211,7 @@ class CreateMemoriesView(APIView):
     
     
 class UpdateKalagQR(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, pk):
         try:
@@ -280,6 +285,7 @@ class ScannedKalagQrView(APIView):
     
 
 class AddUpdateMemoriesAPIView(generics.GenericAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     serializer_class = MemoriesSerializer
 
     def post(self, request, id):
@@ -346,6 +352,7 @@ class KalagMemoriesListAPIView(generics.ListAPIView):
     
     
 class ImagesMemoriesUploadAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = ImagesMemories.objects.all()
     serializer_class = ImagesMemoriesSerializer
 
@@ -357,6 +364,7 @@ class ImagesMemoriesUploadAPIView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class KalagImagesListAPIView(APIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     def get(self, request, kalagId, *args, **kwargs):
         # Filter ImagesMemories entries by kalag_id
         images = ImagesMemories.objects.filter(kalag_id=kalagId)
@@ -371,7 +379,7 @@ class KalagImagesListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class DeleteImagesMemoriesAPIView(APIView):
-    permission_classes = [IsAuthenticated]  # Optionally, add permissions
+    permission_classes = [AllowAny]  # Optionally, add permissions
 
     def delete(self, request, *args, **kwargs):
         image_memory_id = kwargs.get('id')
