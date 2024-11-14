@@ -173,6 +173,7 @@ class KalagUpdateAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
     
 class KalagDetailAPIView(generics.RetrieveAPIView):
+    permission_classes = [AllowAny]  # Optionally, add permissions
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
     lookup_field = 'id'  # Use 'id' as the lookup field
@@ -390,3 +391,7 @@ class DeleteImagesMemoriesAPIView(APIView):
             return Response({"message": "Image memory deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except ImagesMemories.DoesNotExist:
             return Response({"error": "Image memory not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+class ListOfKalagView(generics.ListAPIView):
+    queryset = Kalag.objects.all()
+    serializer_class = KalagSerializer

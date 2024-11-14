@@ -14,6 +14,7 @@ urlpatterns = [
     path('kalag/<int:pk>/delete/', views.KalagDeleteView.as_view(), name='kalag-delete'),
     path('kalag/<int:id>/update/', views.KalagUpdateAPIView.as_view(), name='kalag-update'),
     path('kalags/<int:id>/', views.KalagDetailAPIView.as_view(), name='kalag-detail'),
+    path('kalags/', views.ListOfKalagView.as_view(), name='list-of-kalags'),
     
     path('plots/', views.CreateOrUpdatePlotView.as_view(), name='create-or-update-plot'),
     path('plots-list/', views.LatestPlotView.as_view(), name='plot-by-section'),
