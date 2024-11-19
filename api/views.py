@@ -59,7 +59,9 @@ class KalagListView(generics.ListAPIView):
         cemetery_section = self.request.query_params.get('cemetery_section')
         if cemetery_section:
             queryset = queryset.filter(cemetery_section=cemetery_section)
+        print(f"Filtered Queryset Count: {queryset.count()}")  # Debugging
         return queryset
+
     
 class KalagDeleteView(generics.DestroyAPIView):
     queryset = Kalag.objects.all()
