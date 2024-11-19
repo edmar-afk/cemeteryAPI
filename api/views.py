@@ -19,7 +19,7 @@ from django.http import HttpResponse
 from django.core.files.base import ContentFile
 from rest_framework.exceptions import NotFound
 import logging
-
+from rest_framework.parsers import MultiPartParser, FormParser
 logger = logging.getLogger(__name__)
 
 class UserDetailView(generics.RetrieveAPIView):
@@ -352,15 +352,23 @@ class KalagMemoriesListAPIView(generics.ListAPIView):
     
     
     
-class ImagesMemoriesUploadAPIView(generics.CreateAPIView):
-    permission_classes = [AllowAny]  # Optionally, add permissions
-    queryset = ImagesMemories.objects.all()
-    serializer_class = ImagesMemoriesSerializer
+class UploadBackgroundImageView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def post(self, request, kalagId, *args, **kwargs):
+        try:
+            kalag_instance = Kalag.objects.get(id=kalagId)
+        except Kalag.DoesNotExist:
+            return Response({"detail": "Kalag not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Add the kalag instance to the request data before serialization
+        request.data['kalag'] = kalag_instance.id
+        
+        # Now use the serializer to validate and save
+        serializer = ImagesMemoriesSerializer(data=request.data)
+        
         if serializer.is_valid():
-            serializer.save()  # Save the image memory entry
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -395,3 +403,4 @@ class DeleteImagesMemoriesAPIView(APIView):
 class ListOfKalagView(generics.ListAPIView):
     queryset = Kalag.objects.all()
     serializer_class = KalagSerializer
+    permission_classes = [AllowAny]  # Public access

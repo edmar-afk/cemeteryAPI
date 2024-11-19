@@ -27,7 +27,7 @@ class Memories(models.Model):
 
 class ImagesMemories(models.Model):
     kalag = models.ForeignKey(Kalag, on_delete=models.CASCADE)
-    background_image = models.FileField(upload_to='background/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg'])], null=True, blank=True)
+    background_image = models.FileField(upload_to='background/', validators=[FileExtensionValidator(allowed_extensions=['png', 'jpeg', 'jpg', 'mp4', 'mov', 'mkv', 'wmv', 'mpeg'])], null=True, blank=True)
     
 class VideosMemories(models.Model):
     kalag = models.ForeignKey(Kalag, on_delete=models.CASCADE)

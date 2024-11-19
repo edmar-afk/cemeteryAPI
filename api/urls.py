@@ -33,7 +33,7 @@ urlpatterns = [
     path('kalags/<int:id>/memories/', views.AddUpdateMemoriesAPIView.as_view(), name='add_update_memories'),
     path('kalags/<int:id>/memories-list/', views.KalagMemoriesListAPIView.as_view(), name='kalag-memories-list'),
     
-    path('kalags/<int:kalag_id>/upload-image-memory/', views.ImagesMemoriesUploadAPIView.as_view(), name='upload-image-memory'),
+    path('upload-background-image/<int:kalagId>/', views.UploadBackgroundImageView.as_view(), name='upload-background-image'),
     path('kalags/<int:kalagId>/images/', views.KalagImagesListAPIView.as_view(), name='kalag-images-list'),
     path('imagesmemories/<int:id>/delete/', views.DeleteImagesMemoriesAPIView.as_view(), name='delete-imagesmemories'),
 ]
